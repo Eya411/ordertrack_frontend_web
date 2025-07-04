@@ -1,0 +1,251 @@
+<div class="dashboard-container">
+  <!-- Section Statistiques -->
+  <div class="stats-section">
+    <div class="stat-card" *ngFor="let stat of statCards()" [class]="'stat-card-' + stat.type">
+      <div class="stat-icon">
+        <mat-icon class="icon">{{ stat.icon }}</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h4>{{ stat.title }}</h4>
+        <div class="stat-values">
+          <p *ngFor="let item of stat.values">
+            <span class="stat-label">{{ item.label }}:</span>
+            <span class="stat-value" [class.highlight]="item.highlight">{{ item.value }}</span>
+          </p>
+        </div>
+        <button mat-stroked-button (click)="showDetails(stat.type)">Voir détails</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Principale -->
+  <div class="main-content-section">
+    <!-- Graphiques -->
+    <div class="charts-row">
+      <!-- Graphique d'évolution -->
+      <div class="chart-container">
+        <div class="chart-box">
+          <div class="chart-header">
+            <div class="chart-title">
+              <mat-icon class="icon">insights</mat-icon>
+              <h4>{{ currentChartTitle }}</h4>
+            </div>
+            <div class="chart-controls">
+              <div class="chart-type-actions">
+                <button mat-stroked-button (click)="toggleChartType('commandes')"
+                  [class.active]="currentChartType === 'commandes'">
+                  <mat-icon>shopping_cart</mat-icon> Commandes
+                </button>
+                <button mat-stroked-button (click)="toggleChartType('clients')"
+                  [class.active]="currentChartType === 'clients'">
+                  <mat-icon>people</mat-icon> Clients
+                </button>
+                <button mat-stroked-button (click)="toggleChartType('entreprises')"
+                  [class.active]="currentChartType === 'entreprises'">
+                  <mat-icon>business</mat-icon> Entreprises
+                </button>
+              </div>
+              <div class="chart-view-actions">
+                <button mat-stroked-button (click)="toggleChartView('month')" [class.active]="chartView === 'month'">
+                  <mat-icon>calendar_month</mat-icon> Mensuel
+                </button>
+                <button mat-stroked-button (click)="toggleChartView('week')" [class.active]="chartView === 'week'">
+                  <mat-icon>date_range</mat-icon> Hebdomadaire
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas baseChart [data]="currentChartData" [options]="lineChartOptions" chartType="line"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphique circulaire -->
+      <div class="chart-container" style="position: relative; height: 400px; width: 100%">
+        <div class="chart-box">
+          <div class="chart-header">
+            <div class="chart-title">
+              <mat-icon class="icon">pie_chart</mat-icon>
+              <h4>Statut des Commandes</h4>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas baseChart [data]="pieChartData" [options]="pieChartOptions" [type]="pieChartType">
+            </canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Actions en Attente
+    <div class="actions-section">
+      <div class="pending-orders">
+        <h4><mat-icon>pending_actions</mat-icon> Commandes en Attente</h4>
+        <div *ngFor="let order of pendingActions().commandes_en_attente" class="order-card">
+          <div class="order-header">
+            <span class="order-id">{{ order.numero_commande }}</span>
+            <span class="order-company">{{ order.entreprise.nom }}</span>
+          </div>
+          <div class="order-details">
+            <p>Montant: {{ order.montant_total }} TND</p>
+            <p>Avance: {{ order.avance_payee }} TND</p>
+            <p *ngIf="order.commentaires">Note: {{ order.commentaires }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="late-orders">
+        <h4><mat-icon>warning</mat-icon> Commandes en Retard</h4>
+        <div *ngFor="let order of pendingActions().commandes_en_retard" class="order-card late">
+          <div class="order-header">
+            <span class="order-id">{{ order.numero_commande }}</span>
+            <span class="order-company">{{ order.entreprise.nom }}</span>
+          </div>
+          <div class="order-details">
+            <p>Montant: {{ order.montant_total }} TND</p>
+            <p>Avance: {{ order.avance_payee }} TND</p>
+            <p *ngIf="order.commentaires">Note: {{ order.commentaires }}</p>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Timeline des Commandes -->
+    <div class="timeline-section">
+      <h4><mat-icon>timeline</mat-icon> Dernières Commandes</h4>
+      <div class="timeline">
+        <div *ngFor="let order of orderTimeline()" class="timeline-item" [class]="getOrderStatusClass(order.statut)">
+          <div class="timeline-point"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="order-code">{{ order.code }}</span>
+              <span class="order-date">{{ order.date }}</span>
+            </div>
+            <div class="timeline-body">
+              <p>Client: {{ order.client }}</p>
+              <p>Entreprise: {{ order.entreprise }}</p>
+              <p>Statut: <span class="status-badge">{{ order.statut }}</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicateurs de Performance -->
+    <div class="performance-section">
+      <h4><mat-icon>assessment</mat-icon> Indicateurs de Performance</h4>
+      <div class="performance-cards">
+        <div class="performance-card">
+          <mat-icon>timer</mat-icon>
+          <h4>Temps moyen de traitement</h4>
+          <p>{{ performanceIndicators().temps_moyen_traitement }} heures</p>
+        </div>
+
+        <div class="performance-card">
+          <mat-icon>done_all</mat-icon>
+          <h4>Taux de complétion</h4>
+          <p>{{ performanceIndicators().taux_completion }}%</p>
+        </div>
+
+        <!-- <div class="performance-card">
+          <mat-icon>highlight_off</mat-icon>
+          <h4>Taux d'annulation</h4>
+          <p>{{ performanceIndicators().taux_annulation }}%</p>
+        </div> -->
+
+        <div class="performance-card">
+          <mat-icon>hourglass_bottom</mat-icon>
+          <h4>Commandes > 48h</h4>
+          <p>{{ performanceIndicators().commandes_en_cours_plus_48h }}</p>
+        </div>
+
+        <div class="performance-card">
+          <mat-icon>timer_off</mat-icon>
+          <h4>Temps de réponse moyen</h4>
+          <p>{{ performanceIndicators().temps_reponse_moyen }} heures</p>
+        </div>
+
+        <!-- <div class="performance-card">
+          <mat-icon>star</mat-icon>
+          <h4>Satisfaction client</h4>
+          <p>{{ performanceIndicators().satisfaction_client }}/5</p>
+        </div> -->
+
+        <div class="performance-card">
+          <mat-icon>receipt</mat-icon>
+          <h4>Commandes totales</h4>
+          <p>{{ performanceIndicators().commandes_total }}</p>
+        </div>
+
+        <!-- <div class="performance-card">
+          <mat-icon>check_circle</mat-icon>
+          <h4>Commandes livrées</h4>
+          <p>{{ performanceIndicators().commandes_livrees }}</p>
+        </div>
+      </div> -->
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" *ngIf="showModal()" [@fadeInOut]>
+      <div class="modal-content" [@slideInOut]>
+      
+        <div *ngIf="modalContent()" class="modal-body">
+          <h4>{{ modalContent().title }}</h4>
+          <div *ngIf="modalContent().message" class="modal-message">
+            <p>{{ modalContent().message }}</p>
+          </div>
+          <div *ngIf="!isArray(modalContent().details)" class="detail-card">
+            <div *ngFor="let key of objectKeys(modalContent().details)">
+              <strong>{{ key }}:</strong> {{ modalContent().details[key] }}
+            </div>
+          </div>
+
+          <div *ngIf="isArray(modalContent().details)">
+            <div *ngFor="let item of modalContent().details" class="detail-card">
+              <div *ngFor="let key of objectKeys(item)">
+                <strong>{{ key }}:</strong> {{ item[key] }}
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button mat-stroked-button (click)="closeModal()">Fermer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" *ngIf="showModal()" [@fadeInOut]>
+    <div class="modal-content" [@slideInOut]>
+
+      <div *ngIf="modalContent()" class="modal-body">
+        <h4>{{ modalContent().title }}</h4>
+
+        <div class="modal-details">
+          <!-- Si le détail est un tableau -->
+          <ng-container *ngIf="isArray(modalContent().details); else singleItem">
+            <div *ngFor="let item of modalContent().details" class="detail-card">
+              <div *ngFor="let key of objectKeys(item)">
+                <strong>{{ key }}:</strong> {{ item[key] }}
+              </div>
+              <hr />
+            </div>
+          </ng-container>
+
+          <!-- Sinon, c'est un objet simple -->
+          <ng-template #singleItem>
+            <div class="detail-card">
+              <div *ngFor="let key of objectKeys(modalContent().details)">
+                <strong>{{ key }}:</strong> {{ modalContent().details[key] }}
+              </div>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="modal-actions">
+          <button mat-flat-button color="primary" (click)="closeModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>

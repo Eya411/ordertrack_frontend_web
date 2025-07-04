@@ -1,0 +1,609 @@
+<div class="main-content">
+    <h2 id="gestionClientHeading">Gestion des clients</h2>
+    <div class="container">
+        <!-- Messages d'erreur et de succès -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            <i class="fas fa-exclamation-circle alert-icon"></i> {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="alert alert-success">
+            <i class="fas fa-check-circle alert-icon"></i> {{ successMessage }}
+        </div>
+
+        <!-- Boîte de dialogue de confirmation de suppression -->
+        <div *ngIf="showDeleteConfirmation" class="dialog-overlay">
+            <div class="dialog-container">
+                <div class="dialog-header">
+                    <h3>Confirmation</h3>
+                </div>
+                <div class="dialog-body">
+                    {{ deleteConfirmationMessage }}
+                </div>
+                <div class="dialog-footer">
+                    <button class="btn btn-secondary" (click)="cancelDelete()">Annuler</button>
+                    <button class="btn btn-danger" (click)="confirmDelete()">Confirmer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des clients -->
+        <div *ngIf="viewMode === 'list'">
+            <!-- Barre de recherche et filtres -->
+            <div class="recherche">
+                <form [formGroup]="filterForm">
+                    <div class="filters-row">
+                        <input type="text" formControlName="nom" placeholder="Nom du client" class="form-control"
+                            name="searchNom" aria-label="Nom du client" id="searchNomInput" />
+
+                        <select formControlName="entreprise_id" class="form-select" name="entrepriseSelect"
+                            aria-label="Entreprise du client" id="entrepriseSelect"
+                            placeholder="Toutes les entreprises">
+                            <option value="">Toutes les entreprises</option>
+                            <option *ngFor="let entreprise of entreprises" [value]="entreprise.id">
+                                {{ entreprise.nom }}
+                            </option>
+                        </select>
+
+                        <select formControlName="statut" class="form-select" name="statusSelect"
+                            aria-label="Statut du client" id="statutSelect">
+                            <option value="">Tous les statuts</option>
+                            <option value="actif">Actif</option>
+                            <option value="inactif">Inactif</option>
+                            <option value="en_attente">En attente</option>
+                            <option value="suspendu">Suspendu</option>
+                        </select>
+
+
+                        <div class="date-input">
+                            <input [matDatepicker]="picker" formControlName="date_inscription"
+                                placeholder="Date d'inscription" class="form-control" name="dateInscription"
+                                aria-label="Date d'inscription" />
+                            <i class="fas fa-calendar-alt" (click)="picker.open()"></i>
+                            <mat-datepicker #picker></mat-datepicker>
+                        </div>
+
+                        <button (click)="resetFilters()" type="button" class="btn btn-outline-secondary"
+                            title="Réinitialiser les filtres">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bouton d'ajout de client -->
+            <button (click)="showAddClientForm()" class="btn btn-success my-3" aria-label="Ajouter un client"
+                id="addClientBtn">
+                <i class="fas fa-plus-circle"></i> Ajouter un client
+            </button>
+
+            <!-- Indicateur de chargement -->
+            <div *ngIf="isLoading" class="loading-spinner text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Chargement...</span>
+                </div>
+            </div>
+
+            <!-- Tableau des clients -->
+            <div class="table-responsive" *ngIf="!isLoading">
+                <table class="table table-striped" id="clientTable">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Entreprise</th>
+                            <th>Statut</th>
+                            <th>Commandes</th>
+                            <th>Inscription</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let client of filteredClients">
+                            <td>{{ client.nom }}</td>
+                            <td>{{ client.email }}</td>
+                            <td>{{ getEntrepriseName(client.entreprise_id) }}</td>
+                            <td>
+                                <span class="badge" [ngClass]="{
+                                    'bg-success': client.statut === 'actif',
+                                    'bg-warning': client.statut === 'en_attente',
+                                    'bg-danger': client.statut === 'suspendu',
+                                    'bg-primary': client.statut === 'inactif'
+                                }">
+                                    {{ getStatusLabel(client.statut) }}
+                                </span>
+                            </td>
+                            <td>{{ client.nombre_commandes || 0 }}</td>
+                            <td>{{ client.date_inscription | date:'dd/MM/yyyy' }}</td>
+
+                            <td>
+                                <div class="client-actions">
+                                    <i class="fas fa-eye btn-icon"
+                                        (click)="viewMode = 'details'; selectedClient = client" title="Voir détails"
+                                        aria-label="Voir détails"></i>
+                                    <i class="fas fa-edit btn-icon" (click)="editClient(client)" title="Modifier"
+                                        aria-label="Modifier le client"></i>
+                                    <!-- <i class="fas fa-history btn-icon"
+                                        (click)="viewMode = 'activities'; selectedClient = client" title="Activités"
+                                        aria-label="Voir les activités"></i> -->
+                                    <!-- <i class="fas fa-shopping-bag btn-icon"
+                                        (click)="viewMode = 'orders'; selectedClient = client" title="Commandes"
+                                        aria-label="Voir les commandes"></i> -->
+                                    <i class="fas fa-lock-open btn-icon" (click)="showResetPasswordForm(client)"
+                                        title="Réinitialiser mot de passe" aria-label="Réinitialiser mot de passe"></i>
+                                    <i class="fas fa-trash-alt btn-icon" (click)="deleteClient(client)"
+                                        title="Supprimer" aria-label="Supprimer le client"></i>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr *ngIf="filteredClients.length === 0">
+                            <td colspan="7" class="text-center">Aucun client trouvé</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Formulaire d'ajout de client -->
+        <div *ngIf="viewMode === 'add'">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Ajouter un nouveau client</h3>
+                </div>
+                <div class="card-body">
+                    <form [formGroup]="clientForm" (ngSubmit)="addClient()">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="clientNom" class="form-label">Nom</label>
+                                <i class="fas fa-user"></i>
+                                <input type="text" formControlName="nom" id="clientNom" class="form-control"
+                                    placeholder="Nom du client" required />
+                                <div *ngIf="clientForm.get('nom')?.hasError('required') && clientForm.get('nom')?.touched"
+                                    class="text-danger">Le nom est requis</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientEmail" class="form-label">Email</label>
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" formControlName="email" id="clientEmail" class="form-control"
+                                    placeholder="Email du client" required />
+                                <div *ngIf="clientForm.get('email')?.hasError('required') && clientForm.get('email')?.touched"
+                                    class="text-danger">L'email est requis</div>
+                                <div *ngIf="clientForm.get('email')?.hasError('email') && clientForm.get('email')?.touched"
+                                    class="text-danger">Format d'email invalide</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientAdresse" class="form-label">Adresse</label>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <textarea formControlName="adresse_physique" id="clientAdresse" class="form-control"
+                                    placeholder="Adresse du client"></textarea>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientTelephone" class="form-label">Téléphone</label>
+                                <i class="fas fa-phone"></i>
+                                <input type="text" formControlName="telephone" id="clientTelephone" class="form-control"
+                                    placeholder="Téléphone du client" />
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientEntreprise" class="form-label">Entreprise</label>
+                                <i class="fas fa-building"></i>
+                                <select formControlName="entreprise_id" id="clientEntreprise" class="form-control"
+                                    required>
+                                    <option value="" disabled>-- Sélectionnez une entreprise --</option>
+
+
+                                    <option *ngFor="let entreprise of entreprises" [value]="entreprise.id">
+                                        {{ entreprise.nom }}
+                                    </option>
+                                </select>
+                                <div *ngIf="clientForm.get('entreprise_id')?.hasError('required') && clientForm.get('entreprise_id')?.touched"
+                                    class="text-danger">L'entreprise est requise</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientStatut" class="form-label">Statut</label>
+                                <i class="fas fa-toggle-on"></i>
+                                <select formControlName="statut" id="clientStatut" class="form-control" required>
+                                    <option value="" disabled selected>Sélectionnez un statut</option>
+                                    <option value="actif">Actif</option>
+                                    <option value="inactif">Inactif</option>
+                                    <option value="en_attente">En attente</option>
+                                    <option value="suspendu">Suspendu</option>
+                                </select>
+                                <div *ngIf="clientForm.get('statut')?.hasError('required') && clientForm.get('statut')?.touched"
+                                    class="text-danger">Le statut est requis</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientCommandes" class="form-label">Nombre de commandes</label>
+                                <i class="fas fa-shopping-bag"></i>
+                                <input type="number" formControlName="nombre_commandes" id="clientCommandes"
+                                    class="form-control" placeholder="Nombre de commandes" min="0" />
+                                <div *ngIf="clientForm.get('nombre_commandes')?.invalid && clientForm.get('nombre_commandes')?.touched"
+                                    class="error-message">
+                                    <i class="fas fa-exclamation-circle"></i> Veuillez entrer un nombre de commandes
+                                    valide.
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientPassword" class="form-label">Mot de passe</label>
+                                <i class="fas fa-lock"></i>
+                                <div class="input-group">
+                                    <input [type]="showPassword ? 'text' : 'password'" formControlName="mot_de_passe"
+                                        id="clientPassword" class="form-control"
+                                        placeholder="Mot de passe (min. 6 caractères)" required />
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        (click)="toggleShowPassword()">
+                                        <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                                <div *ngIf="clientForm.get('mot_de_passe')?.hasError('required') && clientForm.get('mot_de_passe')?.touched"
+                                    class="text-danger">Le mot de passe est requis</div>
+                                <div *ngIf="clientForm.get('mot_de_passe')?.hasError('minlength') && clientForm.get('mot_de_passe')?.touched"
+                                    class="text-danger">Le mot de passe doit contenir au moins 6 caractères</div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-4">
+                            <button class="btn btn-primary" type="submit" [disabled]="isLoading || clientForm.invalid">
+                                <i class="fas fa-save"></i> Ajouter
+                            </button>
+                            <button class="btn btn-secondary" type="button" (click)="cancelEdit()">
+                                <i class="fas fa-times-circle"></i> Annuler
+                            </button>
+                        </div>
+
+                        <div *ngIf="isLoading" class="loading-indicator mt-3">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire d'édition de client -->
+        <div *ngIf="viewMode === 'edit' && selectedClient">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Modifier le client: {{ selectedClient.nom }}</h3>
+                </div>
+                <div class="card-body">
+                    <form [formGroup]="clientForm" (ngSubmit)="updateClient()">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="clientNomEdit" class="form-label">Nom</label>
+                                <i class="fas fa-user"></i>
+                                <input type="text" formControlName="nom" id="clientNomEdit" class="form-control"
+                                    placeholder="Nom du client" required />
+                                <div *ngIf="clientForm.get('nom')?.hasError('required') && clientForm.get('nom')?.touched"
+                                    class="text-danger">Le nom est requis</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientEmailEdit" class="form-label">Email</label>
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" formControlName="email" id="clientEmailEdit" class="form-control"
+                                    placeholder="Email du client" required />
+                                <div *ngIf="clientForm.get('email')?.hasError('required') && clientForm.get('email')?.touched"
+                                    class="text-danger">L'email est requis</div>
+                                <div *ngIf="clientForm.get('email')?.hasError('email') && clientForm.get('email')?.touched"
+                                    class="text-danger">Format d'email invalide</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientAdresseEdit" class="form-label">Adresse</label>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <textarea formControlName="adresse_physique" id="clientAdresseEdit" class="form-control"
+                                    placeholder="Adresse du client"></textarea>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientTelephoneEdit" class="form-label">Téléphone</label>
+                                <i class="fas fa-phone"></i>
+                                <input type="text" formControlName="telephone" id="clientTelephoneEdit"
+                                    class="form-control" placeholder="Téléphone du client" />
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientEntrepriseEdit" class="form-label">Entreprise</label>
+                                <i class="fas fa-building"></i>
+                                <select formControlName="entreprise_id" id="clientEntrepriseEdit" class="form-control"
+                                    required>
+                                    <option *ngFor="let entreprise of entreprises" [value]="entreprise.id">
+                                        {{ entreprise.nom }}
+                                    </option>
+                                </select>
+                                <div *ngIf="clientForm.get('entreprise_id')?.hasError('required') && clientForm.get('entreprise_id')?.touched"
+                                    class="text-danger">L'entreprise est requise</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientStatutEdit" class="form-label">Statut</label>
+                                <i class="fas fa-toggle-on"></i>
+                                <select formControlName="statut" id="clientStatutEdit" class="form-control" required>
+                                    <option value="actif">Actif</option>
+                                    <option value="inactif">Inactif</option>
+                                    <option value="en_attente">En attente</option>
+                                    <option value="suspendu">Suspendu</option>
+                                </select>
+                                <div *ngIf="clientForm.get('statut')?.hasError('required') && clientForm.get('statut')?.touched"
+                                    class="text-danger">Le statut est requis</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="clientCommandesEdit" class="form-label">Nombre de commandes</label>
+                                <i class="fas fa-shopping-bag"></i>
+                                <input type="number" formControlName="nombre_commandes" id="clientCommandesEdit"
+                                    class="form-control" placeholder="Nombre de commandes" min="0" />
+
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-4">
+                            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+
+
+
+                            <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+                                <i class="fas fa-times-circle"></i> Annuler
+                            </button>
+                        </div>
+
+                        <div *ngIf="isLoading" class="loading-indicator mt-3">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Vue détaillée du client -->
+        <div *ngIf="viewMode === 'details' && selectedClient">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Détails du client: {{ selectedClient.nom }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="client-details">
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-user"></i> Nom:</span>
+                            <span class="detail-value">{{ selectedClient.nom }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-envelope"></i> Email:</span>
+                            <span class="detail-value">{{ selectedClient.email }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-phone"></i> Téléphone:</span>
+                            <span class="detail-value">{{ selectedClient.telephone || 'Non renseigné' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Adresse:</span>
+                            <span class="detail-value">{{ selectedClient.adresse_physique || 'Non renseignée' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-building"></i> Entreprise:</span>
+                            <span class="detail-value">{{ getEntrepriseName(selectedClient.entreprise_id) }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-toggle-on"></i> Statut:</span>
+                            <span class="detail-value">
+                                <span class="badge" [ngClass]="{
+                                    'bg-success': selectedClient.statut === 'actif',
+                                    'bg-warning': selectedClient.statut === 'en_attente',
+                                    'bg-danger': selectedClient.statut === 'suspendu',
+                                    'bg-primary': selectedClient.statut === 'inactif'
+                                }">
+                                    {{ getStatusLabel(selectedClient.statut) }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-shopping-bag"></i> Nombre de commandes:</span>
+                            <span class="detail-value">{{ selectedClient.nombre_commandes || 0 }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-calendar-alt"></i> Date d'inscription:</span>
+                            <span class="detail-value">{{ selectedClient.date_inscription | date:'dd/MM/yyyy' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="actions-bar mt-4">
+                        <button class="btn btn-primary" (click)="editClient(selectedClient)">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <!-- <button class="btn btn-secondary" (click)="viewMode = 'activities'">
+                            <i class="fas fa-history"></i> Activités
+                        </button> -->
+                        <!-- <button class="btn btn-secondary" (click)="viewMode = 'orders'">
+                            <i class="fas fa-shopping-bag"></i> Commandes
+                        </button> -->
+                        <button class="btn btn-outline-secondary" (click)="viewMode = 'list'">
+                            <i class="fas fa-arrow-left"></i> Retour à la liste
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue des activités du client -->
+        <div *ngIf="viewMode === 'activities' && selectedClient">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Historique d'activités: {{ selectedClient.nom }}</h3>
+                </div>
+                <div class="card-body">
+                    <div *ngIf="isActivitiesLoading" class="loading-spinner text-center my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Chargement...</span>
+                        </div>
+                    </div>
+
+                    <div *ngIf="!isActivitiesLoading">
+                        <ul class="activity-list" *ngIf="activities && activities.length > 0">
+                            <li *ngFor="let activity of activities" class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas" [ngClass]="getActivityIcon(activity.type)"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-description">{{ activity.description }}</div>
+                                    <div class="activity-date">{{ activity.date | date:'dd/MM/yyyy HH:mm' }}</div>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="no-data-message" *ngIf="!activities || activities.length === 0">
+                            <i class="fas fa-info-circle"></i> Aucune activité trouvée pour ce client
+                        </div>
+                    </div>
+
+                    <div class="actions-bar mt-4">
+                        <button class="btn btn-outline-secondary" (click)="viewMode = 'details'">
+                            <i class="fas fa-arrow-left"></i> Retour aux détails
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue des commandes du client -->
+        <div *ngIf="viewMode === 'orders' && selectedClient">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Commandes: {{ selectedClient.nom }}</h3>
+                </div>
+                <div class="card-body">
+                    <div *ngIf="isOrdersLoading" class="loading-spinner text-center my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Chargement...</span>
+                        </div>
+                    </div>
+
+                    <div *ngIf="!isOrdersLoading">
+                        <div class="table-responsive" *ngIf="clientOrders && clientOrders.length > 0">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Référence</th>
+                                        <th>Date</th>
+                                        <th>Montant</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let order of clientOrders">
+                                        <td>{{ order.reference }}</td>
+                                        <td>{{ order.date | date:'dd/MM/yyyy' }}</td>
+                                        <td>{{ order.montant | currency:'EUR':'symbol' }}</td>
+                                        <td>
+                                            <span class="badge" [ngClass]="getOrderStatusClass(order.statut)">
+                                                {{ getOrderStatusLabel(order.statut) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="order-actions">
+                                                <i class="fas fa-eye btn-icon" (click)="viewOrderDetails(order)"
+                                                    title="Voir détails" aria-label="Voir détails de la commande"></i>
+                                                <i class="fas fa-file-invoice btn-icon"
+                                                    (click)="printOrderInvoice(order)" title="Facture"
+                                                    aria-label="Voir la facture"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="no-data-message" *ngIf="!clientOrders || clientOrders.length === 0">
+                            <i class="fas fa-info-circle"></i> Aucune commande trouvée pour ce client
+                        </div>
+                    </div>
+
+                    <div class="actions-bar mt-4">
+                        <button class="btn btn-outline-secondary" (click)="viewMode = 'details'">
+                            <i class="fas fa-arrow-left"></i> Retour aux détails
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de réinitialisation du mot de passe -->
+        <div *ngIf="viewMode === 'reset_password' && selectedClient">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Réinitialisation du mot de passe: {{ selectedClient.nom }}</h3>
+                </div>
+                <div class="card-body">
+                    <form [formGroup]="passwordForm" (ngSubmit)="resetClientPassword()">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="newPassword" class="form-label">Nouveau mot de passe</label>
+                                <i class="fas fa-lock"></i>
+                                <div class="input-group">
+                                    <input [type]="showPassword ? 'text' : 'password'" formControlName="mot_de_passe"
+                                        id="newPassword" class="form-control" placeholder="Nouveau mot de passe"
+                                        required />
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        (click)="toggleShowPassword()">
+                                        <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                                <div *ngIf="passwordForm.get('mot_de_passe')?.hasError('required') && passwordForm.get('mot_de_passe')?.touched"
+                                    class="text-danger">Le mot de passe est requis</div>
+                                <div *ngIf="passwordForm.get('mot_de_passe')?.hasError('minlength') && passwordForm.get('mot_de_passe')?.touched"
+                                    class="text-danger">Le mot de passe doit contenir au moins 6 caractères</div>
+                            </div>
+
+                            <div class="col-md-6 form-group">
+                                <label for="confirmPassword" class="form-label">Confirmation du mot de passe</label>
+                                <i class="fas fa-lock"></i>
+                                <div class="input-group">
+                                    <input [type]="showPasswordConfirm ? 'text' : 'password'"
+                                        formControlName="confirm_password" id="confirmPassword" class="form-control"
+                                        placeholder="Confirmez le mot de passe" required />
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        (click)="toggleShowPasswordConfirm()">
+                                        <i class="fas" [ngClass]="showPasswordConfirm ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                                <div *ngIf="passwordForm.get('confirm_password')?.hasError('required') && passwordForm.get('confirm_password')?.touched"
+                                    class="text-danger">La confirmation du mot de passe est requise</div>
+                                <div *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirm_password')?.touched"
+                                    class="text-danger">Les mots de passe ne correspondent pas</div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-4">
+                            <button class="btn btn-primary" type="submit"
+                                [disabled]="isLoading || passwordForm.invalid">
+                                <i class="fas fa-lock-reset"></i> Réinitialiser
+                            </button>
+                            <button class="btn btn-secondary" type="button" (click)="cancelPasswordReset()">
+                                <i class="fas fa-times-circle"></i> Annuler
+                            </button>
+                        </div>
+
+                        <div *ngIf="isLoading" class="loading-indicator mt-3">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

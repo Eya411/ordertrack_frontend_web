@@ -1,0 +1,36 @@
+<div *ngIf="isSidebarVisible" class="sidebar" [class.open]="sidebarOpen">
+    <!-- Logo -->
+    <div class="logo">
+        <img src="/assets/logo.png" alt="Logo" class="logo-img">
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <a routerLink="/dashboard" routerLinkActive="active">
+            <i class="fas fa-chart-line"></i> Dashboard
+        </a>
+        <a routerLink="/admin" routerLinkActive="active">
+            <i class="fas fa-user-shield"></i> Gestion des Administrateurs
+        </a>
+        <a routerLink="/entreprises" routerLinkActive="active">
+            <i class="fas fa-building"></i> Gestion des Entreprises
+        </a>
+        <a routerLink="/comptes-secondaires" routerLinkActive="active">
+            <i class="fas fa-users"></i> Gestion des Comptes Secondaires
+        </a>
+        <a routerLink="/clients" routerLinkActive="active">
+            <i class="fas fa-user-friends"></i> Gestion des Clients
+        </a>
+        <a routerLink="/commandes" routerLinkActive="active">
+            <i class="fas fa-shopping-cart"></i> Gestion des Commandes
+        </a>
+        <a (click)="logout()" class="logout-link" style="cursor: pointer;">
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
+        </a>
+    </nav>
+
+    <!-- Toggle button pour mobile (visible dans le coin par exemple) -->
+    <div class="sidebar-toggle" (click)="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
+</div>

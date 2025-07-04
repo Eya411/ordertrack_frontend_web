@@ -1,0 +1,586 @@
+/* Style du contenu principal */
+.main-content {
+    padding: 25px;
+    margin-top: 10px;
+    width: 100%;
+    font-family: 'Roboto', sans-serif;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+h2 {
+    margin-bottom: 3%;
+    color: #09294b;
+    font-weight: 500;
+    padding-bottom: 10px;
+    position: relative;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: #09294b;
+    transition: width 0.5s ease;
+}
+
+h2:hover::after {
+    width: 100px;
+}
+
+/* Barre d'actions et recherche */
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.recherche {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-group {
+    position: relative;
+    width: 300px;
+}
+
+.search-group input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    font-size: 16px;
+    border: 1px solid #0b0202;
+    border-radius: 25px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #09294b;
+}
+
+.filter-group select {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid #0b0202;
+    border-radius: 25px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: white;
+    width: 200px;
+}
+
+.search-group input:focus,
+.filter-group select:focus {
+    border-color: #09294b;
+    box-shadow: 0 0 10px rgba(1, 74, 151, 0.625);
+}
+/* Styles pour les messages d'alerte */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-icon {
+    font-size: 20px;
+}
+
+/* Styles pour les messages d'erreur dans les formulaires */
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.error-message i {
+    font-size: 14px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* Boutons d'action */
+.btn {
+    display: inline-block;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-success {
+    background: linear-gradient(115deg, #033baa, #040c56dd);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #1b2374, #040c56);
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2);
+}
+
+.btn-success:active {
+    transform: translateY(1px);
+}
+
+.btn-success i {
+    font-size: 15px;
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+}
+
+.btn-success:hover i {
+    transform: rotate(15deg);
+}
+
+/* Tableau des comptes */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+    background-color: #081169dd;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 15px;
+    text-align: left;
+    vertical-align: middle;
+    position: sticky;
+    top: 0;
+    transition: background-color 0.3s ease;
+}
+
+.table th:hover {
+    background-color: #070d5e;
+}
+
+.table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table tbody tr:hover td {
+    background-color: rgba(9, 41, 75, 0.05);
+}
+
+/* Style pour les badges de statut */
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.badge-success {
+    color: #fff;
+    background-color: #28a745;
+}
+
+.badge-secondary {
+    color: #fff;
+    background-color: #6c757d;
+}
+
+.badge-warning {
+    color: #212529;
+    background-color: #ffc107;
+}
+
+.badge-danger {
+    color: #fff;
+    background-color: #dc3545;
+}
+
+/* Actions dans le tableau */
+.actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    color: #0925ac;
+    background-color: #feffff00;
+    border-color: #ffffff00;
+}
+
+.btn-primary:hover {
+    background-color: #ffffff00;
+    border-color: #fafcff00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-info {
+    color: #0295ab;
+    background-color: #ffffff00;
+    border-color: #f8feff00;
+}
+
+.btn-info:hover {
+    background-color: #fefefe00;
+    border-color: #ffffff00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(23, 162, 184, 0.1);
+}
+
+.btn-danger {
+    color: #bd0909;
+    background-color: #ffffff00;
+    border-color: #ffffff00;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.1);
+}
+
+.btn i {
+    margin-right: 5px;
+}
+
+/* Style pour le message "Aucun compte trouvé" */
+.text-center {
+    text-align: center;
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 1.75rem auto;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1051;
+    animation: modalSlideIn 0.4s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #09294b;
+    margin: 0;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+    padding: 0;
+    margin: 0;
+}
+
+.close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Formulaires dans les modaux */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -10px;
+    margin-left: -10px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    padding: 0 10px;
+    margin-bottom: 1rem;
+    flex: 1 0 50%;
+    min-width: 250px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #09294b;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    transition: all 0.3s ease-in-out;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #0b3d91;
+    background-color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(11, 61, 145, 0.25);
+    outline: none;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+/* Boutons pour les actions de formulaire */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    display: none;
+}
+
+.modal-backdrop.show {
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-content {
+        width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .action-bar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .recherche {
+        width: 100%;
+    }
+    
+    .search-group,
+    .filter-group {
+        width: 100%;
+    }
+    
+    .btn-success {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-group {
+        flex: 1 0 100%;
+    }
+    
+    .actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .actions .btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+}
+
+@media (max-width: 576px) {
+    .recherche {
+        flex-direction: column;
+    }
+    
+    .search-group,
+    .filter-group {
+        width: 100%;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Styles spécifiques pour les petits écrans */
+@media (max-width: 480px) {
+    .table th, 
+    .table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    .badge {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+

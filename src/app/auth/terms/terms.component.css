@@ -1,0 +1,31 @@
+.terms-container {
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+    background-color: #ffffff;
+}
+
+mat-card {
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;  
+}
+
+mat-card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgba(1, 1, 71, 0.845);
+}
+
+section {
+    margin-top: 20px;
+}
+
+h5 {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+ul {
+    margin-left: 20px;
+}

@@ -1,0 +1,154 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    background: #e7e4e4ba;
+    color: #5e5c5c;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+/* Version réduite sur petit écran */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 80px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        width: 260px;
+    }
+
+    .sidebar:not(.open) .logo-img {
+        width: 40px;
+    }
+
+    .sidebar:not(.open) nav a span {
+        display: none;
+    }
+}
+
+.logo {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #1e293b;
+}
+
+.logo-img {
+    max-width: 90%;
+    height: auto;
+    transition: width 0.3s ease;
+}
+
+nav {
+    padding: 1rem 0;
+}
+
+nav a {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.5rem;
+    color: #000000;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+nav a i {
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    min-width: 22px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    color: #f8f9fa;
+    background-color: #747c8b77;
+    padding-left: 2rem;
+}
+
+nav a:hover i {
+    color: #4c5ca0;
+    transform: scale(1.1);
+}
+
+nav a.active {
+    color: #f8f9fa;
+    background-color: #a4a9afdd;
+    border-left: 4px solid #4361ee;
+}
+
+nav a.active i {
+    color: #4361ee;
+}
+
+.logout-link {
+    margin-top: 12.2rem;
+    color: #c91818 !important;
+    border-top: 1px solid #1e293b;
+    padding-top: 1rem;
+}
+
+.logout-link:hover {
+    background-color: rgba(255, 107, 107, 0.1);
+}
+
+.sidebar-toggle {
+    display: none;
+    position: absolute;
+    top: 1rem;
+    right: -40px;
+    background: #4361ee;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 0 4px 4px 0;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    background-color: #3a56d4;
+}
+
+@media (max-width: 768px) {
+    .sidebar-toggle {
+        display: flex;
+    }
+}
+
+/* Animation pour les icônes */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+nav a:active i {
+    animation: pulse 0.3s ease-in-out;
+}
+
+
+
+
+

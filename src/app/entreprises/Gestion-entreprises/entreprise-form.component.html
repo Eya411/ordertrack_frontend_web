@@ -1,0 +1,668 @@
+<div class="main-content">
+    <h2>Gestion des Entreprises</h2>
+    <div class="container">
+        <!-- Messages d'état -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+        </div>
+        <div *ngIf="showSuccessMessage" class="alert alert-success">
+            {{ successMessage }}
+        </div>
+
+        <!-- Barre de recherche et filtres -->
+        <div class="recherche">
+            <input type="text" [(ngModel)]="searchNom" (input)="filterEntreprises()"
+                placeholder="Nom de l'entreprise..." class="form-control" name="searchNom"
+                aria-label="Nom de l'entreprise" />
+
+            <select [(ngModel)]="selectedStatut" (change)="filterEntreprises()" class="form-select"
+                name="selectedStatut" aria-label="Statut de l'entreprise">
+                <option value="">Tous les statuts</option>
+                <option *ngFor="let statut of ['Actif', 'Inactif', 'validé', 'rejeté']" [value]="statut">
+                    {{ statut }}
+                </option>
+            </select>
+
+            <select [(ngModel)]="selectedSecteur" (change)="filterEntreprises()" class="form-select"
+                name="selectedSecteur" aria-label="Secteur de l'entreprise">
+                <option value="">Tous les secteurs</option>
+                <option *ngFor="let secteur of secteurs" [value]="secteur">{{ secteur }}</option>
+            </select>
+
+            <select [(ngModel)]="searchPaiement" (change)="filterEntreprises()" class="form-select"
+                name="searchPaiement" aria-label="Méthode de paiement">
+                <option value="">Toutes méthodes</option>
+                <option *ngFor="let method of paymentMethods" [value]="method">{{ method }}</option>
+            </select>
+
+            <button (click)="resetFilters()" class="btn btn-outline-secondary" title="Réinitialiser les filtres">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+
+        
+        <!-- Bouton d'ajout -->
+        <button (click)="openAddEntrepriseForm()" class="btn btn-success my-3">
+            <i class="fas fa-plus-circle"></i> Ajouter une entreprise
+        </button>
+
+        <!-- Tableau des entreprises -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Matricule Fiscal</th>
+                        <th>Secteur</th>
+                        <th>Statut</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Méthode Paiement</th>
+                        <th>Capital Social</th>
+                        <th>Registre Commerce</th>
+                        <th>Forme Juridique</th>
+                        <th>Adresse</th>
+                        <th>Raison Sociale</th>
+                        <th>Devise</th>
+                        <th>TVA Applicable</th>
+                        <th>Nom Dirigeant</th>
+                        <th>Nom Représentant Legal</th>
+                        <th>Nombre Employés</th>
+                        <th>Date Création</th>
+                        <th>Identifiant Unique</th>
+                        <th>Statut Entreprise</th>
+                        <th>Date Inscription</th>
+                        <th>Superadmin Assigné</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let entreprise of filteredEntreprises; trackBy: trackById">
+                        <td>{{ entreprise.nom }}</td>
+                        <td>{{ entreprise.matricule_fiscal }}</td>
+                        <td>{{ entreprise.secteur_activite }}</td>
+                        <td>
+                            <span class="badge" [ngClass]="{
+                                'bg-success': entreprise.statut_entreprise === 'Actif',
+                                'bg-danger': entreprise.statut_entreprise === 'Inactif',
+                                'bg-primary': entreprise.statut_entreprise === 'validé',
+                                'bg-warning': entreprise.statut_entreprise === 'rejeté'
+                            }">
+                                {{ entreprise.statut_entreprise }}
+                            </span>
+                        </td>
+                        <td>{{ entreprise.email }}</td>
+                        <td>{{ entreprise.telephone }}</td>
+                        <td>{{ entreprise.methode_paiement }}</td>
+                        <td>{{ entreprise.capital_social }}</td>
+                        <td>{{ entreprise.registre_commerce }}</td>
+                        <td>{{ entreprise.forme_juridique }}</td>
+                        <td>{{ entreprise.adresse }}</td>
+                        <td>{{ entreprise.raison_sociale }}</td>
+                        <td>{{ entreprise.devise }}</td>
+                        <td>{{ entreprise.tva_applicable ? 'Oui' : 'Non' }}</td>
+                        <td>{{ entreprise.nom_dirigeant }}</td>
+                        <td>{{ entreprise.nom_representant_legal }}</td>
+                        <td>{{ entreprise.nombre_employes }}</td>
+                        <td>{{ entreprise.date_creation | date: 'dd/MM/yyyy' }}</td>
+                        <td>{{ entreprise.identifiant_unique }}</td>
+                        <td>{{ entreprise.statut_entreprise }}</td>
+                        <td>{{ entreprise.date_inscription | date: 'dd/MM/yyyy' }}</td>
+                        <td>{{ entreprise.superadmin_assigne }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" (click)="openUpdateForm(entreprise)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+
+
+                                <!-- Dans votre tableau/liste d'entreprises
+                                <button (click)="viewTransactionHistory(entreprise.id)" class="transaction-btn">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button> -->
+
+                                <!-- Modal pour afficher l'historique des transactions -->
+                                <div *ngIf="showTransactionHistoryModal" class="modal-overlay">
+                                    <div class="modal-content">
+                                        <!-- <div class="modal-header">
+                                            <h3>Historique des Transactions</h3>
+                                            <button (click)="closeTransactionHistory()"
+                                                class="close-btn">&times;</button>
+                                        </div> -->
+
+                                        <div *ngIf="loading" class="loading-spinner">
+                                            Chargement en cours...
+                                        </div>
+
+                                        <div *ngIf="!loading">
+                                            <div *ngIf="transactionHistory.length === 0" class="no-transactions">
+                                                Aucune transaction trouvée pour cette entreprise.
+                                            </div>
+
+                                            <table *ngIf="transactionHistory.length > 0" class="transactions-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Référence</th>
+                                                        <th>Montant</th>
+                                                        <th>Type</th>
+                                                        <th>Description</th>
+                                                        <th>Mode Paiement</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngFor="let transaction of transactionHistory">
+                                                        <td>{{ transaction.date_transaction | date:'dd/MM/yyyy HH:mm' }}
+                                                        </td>
+                                                        <td>{{ transaction.reference_transaction }}</td>
+                                                        <td [class.credit]="transaction.type === 'Crédit'"
+                                                            [class.debit]="transaction.type === 'Débit'">
+                                                            {{ transaction.montant | currency:'EUR':'symbol':'1.2-2' }}
+                                                        </td>
+                                                        <td>{{ transaction.type }}</td>
+                                                        <td>{{ transaction.description }}</td>
+                                                        <td>{{ transaction.mode_paiement || '-' }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+
+                                <!-- Bouton de suppression -->
+                                <button class="btn btn-sm btn-outline-danger"
+                                    (click)="openDeleteConfirmation(entreprise.id)">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+
+                                <!-- Modal de confirmation de suppression -->
+                                <div *ngIf="showDeleteConfirmation" class="delete-modal">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirmez-vous la suppression?</h5>
+                                            <button type="button" class="close" (click)="cancelDelete()"
+                                                aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="modal-actions">
+                                            <button type="button" class="btn btn-secondary"
+                                                (click)="cancelDelete()">Annuler</button>
+                                            <button type="button" class="btn btn-danger"
+                                                (click)="confirmDelete()">Supprimer</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+    
+                            </div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="filteredEntreprises.length === 0 && !loading">
+                        <td colspan="23" class="text-center">Aucune entreprise trouvée</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Spinner de chargement -->
+        <div *ngIf="loading" class="text-center my-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+
+        <!-- Modal Ajout Entreprise -->
+        <div *ngIf="showAddEntrepriseForm" class="modal fade show d-block" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ajouter une Entreprise</h5>
+                        <button type="button" class="btn-close" (click)="closeAddEntrepriseForm()"
+                            aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form #addForm="ngForm" (ngSubmit)="addEntreprise()">
+                            <div class="row g-3">
+                                <!-- Informations légales -->
+                                <div class="col-md-6">
+                                    <h5>Informations légales</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Matricule Fiscal</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entreprise.matricule_fiscal" name="matricule_fiscal" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Registre Commerce</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entreprise.registre_commerce" name="registre_commerce"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Forme Juridique</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.forme_juridique"
+                                            name="forme_juridique" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Capital Social</label>
+                                        <input type="number" class="form-control"
+                                            [(ngModel)]="entreprise.capital_social" name="capital_social" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Statut Juridique</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entreprise.statut_juridique" name="statut_juridique" required>
+                                    </div>
+                                </div>
+
+                                <!-- Informations générales -->
+                                <div class="col-md-6">
+                                    <h5>Informations générales</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.nom" name="nom"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Raison Sociale</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.raison_sociale"
+                                            name="raison_sociale" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Secteur d'activité</label>
+                                        <div class="input-group">
+                                            <select class="form-select" [(ngModel)]="entreprise.secteur_activite"
+                                                name="secteur_activite" required>
+                                                <option value="">Sélectionner un secteur</option>
+                                                <option *ngFor="let secteur of secteurs" [value]="secteur">{{ secteur }}
+                                                </option>
+                                                <option value="nouveau">+ Ajouter un nouveau secteur</option>
+                                            </select>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                (click)="showNewSectorInput = true">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ajouter ce bloc en dessous -->
+                                    <div class="mb-3"
+                                        *ngIf="showNewSectorInput || entreprise.secteur_activite === 'nouveau'">
+                                        <label class="form-label">Nouveau secteur d'activité</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" [(ngModel)]="newSector"
+                                                name="newSector" placeholder="Entrez un nouveau secteur">
+                                            <button class="btn btn-primary" type="button"
+                                                (click)="addNewSector()">Ajouter</button>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" [(ngModel)]="entreprise.description"
+                                            name="description" required></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Coordonnées -->
+                                <div class="col-md-6">
+                                    <h5>Coordonnées</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Adresse</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.adresse"
+                                            name="adresse" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Téléphone</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.telephone"
+                                            name="telephone" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" [(ngModel)]="entreprise.email"
+                                            name="email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Pays / Région</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.pays_region"
+                                            name="pays_region" required>
+                                    </div>
+                                </div>
+
+                                <!-- Informations bancaires et administratives -->
+                                <div class="col-md-6">
+                                    <h5>Informations bancaires et administratives</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Numéro de Compte</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.numero_compte"
+                                            name="numero_compte" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom de la Banque</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.nom_banque"
+                                            name="nom_banque" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Devise</label>
+                                        <select class="form-select" [(ngModel)]="entreprise.devise" name="devise"
+                                            required>
+                                            <option *ngFor="let devise of ['MAD', 'EUR', 'USD']" [value]="devise">{{
+                                                devise }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input"
+                                            [(ngModel)]="entreprise.tva_applicable" name="tva_applicable">
+                                        <label class="form-check-label">TVA Applicable</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Méthode de Paiement</label>
+                                        <select class="form-select" [(ngModel)]="entreprise.methode_paiement"
+                                            name="methode_paiement" required>
+                                            <option *ngFor="let method of paymentMethods" [value]="method">{{ method }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Autres informations -->
+                                <div class="col-md-6">
+                                    <h5>Autres informations</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom du Dirigeant</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entreprise.nom_dirigeant"
+                                            name="nom_dirigeant" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom du Représentant Légal</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entreprise.nom_representant_legal"
+                                            name="nom_representant_legal" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nombre d'Employés</label>
+                                        <input type="number" class="form-control"
+                                            [(ngModel)]="entreprise.nombre_employes" name="nombre_employes" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Date de Création</label>
+                                        <input type="date" class="form-control" [(ngModel)]="entreprise.date_creation"
+                                            name="date_creation" required>
+                                    </div>
+                                </div>
+
+                                <!-- Identifiant et statut -->
+                                <div class="col-md-6">
+                                    <h5>Identifiant et statut</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Identifiant Unique</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entreprise.identifiant_unique" name="identifiant_unique"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Statut Entreprise</label>
+                                        <select class="form-select" [(ngModel)]="entreprise.statut_entreprise"
+                                            name="statut_entreprise" required>
+                                            <option *ngFor="let statut of ['Actif', 'Inactif', 'validé', 'rejeté']"
+                                                [value]="statut">{{ statut }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Administration -->
+                                <div class="col-md-6">
+                                    <h5>Administration</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Date d'Inscription</label>
+                                        <input type="date" class="form-control"
+                                            [(ngModel)]="entreprise.date_inscription" name="date_inscription" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Superadmin Assigné</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entreprise.superadmin_assigne" name="superadmin_assigne"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    (click)="closeAddEntrepriseForm()">Annuler</button>
+                                <button type="submit" class="btn btn-primary" [disabled]="!addForm.valid || loading">
+                                    <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
+                                    Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="showAddEntrepriseForm" class="modal-backdrop fade show"></div>
+        </div>
+
+        <!-- Modal Modification Entreprise -->
+        <div *ngIf="showUpdateForm" class="modal fade show d-block" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Modifier Entreprise</h5>
+                        <button type="button" class="btn-close" (click)="closeUpdateForm()"
+                            aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form #updateForm="ngForm" (ngSubmit)="updateEntreprise()">
+                            <div class="row g-3">
+                                <!-- Informations légales -->
+                                <div class="col-md-6">
+                                    <h5>Informations légales</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Matricule Fiscal</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.matricule_fiscal" name="matricule_fiscal"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Registre Commerce</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.registre_commerce" name="registre_commerce"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Forme Juridique</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.forme_juridique" name="forme_juridique"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Capital Social</label>
+                                        <input type="number" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.capital_social" name="capital_social"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Statut Juridique</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.statut_juridique" name="statut_juridique"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <!-- Informations générales -->
+                                <div class="col-md-6">
+                                    <h5>Informations générales</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entrepriseToUpdate.nom"
+                                            name="nom" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Raison Sociale</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.raison_sociale" name="raison_sociale"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Secteur d'activité</label>
+                                        <select class="form-select" [(ngModel)]="entrepriseToUpdate.secteur_activite"
+                                            name="secteur_activite" required>
+                                            <option value="">Sélectionner un secteur</option>
+                                            <option *ngFor="let secteur of secteurs" [value]="secteur">{{ secteur }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" [(ngModel)]="entrepriseToUpdate.description"
+                                            name="description" required></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Coordonnées -->
+                                <div class="col-md-6">
+                                    <h5>Coordonnées</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Adresse</label>
+                                        <input type="text" class="form-control" [(ngModel)]="entrepriseToUpdate.adresse"
+                                            name="adresse" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Téléphone</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.telephone" name="telephone" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" [(ngModel)]="entrepriseToUpdate.email"
+                                            name="email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Pays/Region</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.pays_region" name="pays_region" required>
+                                    </div>
+                                </div>
+
+                                <!-- Informations bancaires -->
+                                <div class="col-md-6">
+                                    <h5>Informations bancaires</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Numéro de Compte</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.numero_compte" name="numero_compte"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom de la Banque</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.nom_banque" name="nom_banque" required>
+                                    </div>
+                                </div>
+
+                                <!-- Informations financières -->
+                                <div class="col-md-6">
+                                    <h5>Informations financières</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Devise</label>
+                                        <select class="form-select" [(ngModel)]="entrepriseToUpdate.devise"
+                                            name="devise" required>
+                                            <option *ngFor="let devise of ['TND']" [value]="devise">{{
+                                                devise }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input"
+                                            [(ngModel)]="entrepriseToUpdate.tva_applicable" name="tva_applicable">
+                                        <label class="form-check-label">TVA Applicable</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Méthode de Paiement</label>
+                                        <select class="form-select" [(ngModel)]="entrepriseToUpdate.methode_paiement"
+                                            name="methode_paiement" required>
+                                            <option *ngFor="let method of paymentMethods" [value]="method">{{ method }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Informations supplémentaires -->
+                                <div class="col-md-6">
+                                    <h5>Informations supplémentaires</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom du Dirigeant</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.nom_dirigeant" name="nom_dirigeant"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom du Représentant Légal</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.nom_representant_legal"
+                                            name="nom_representant_legal" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nombre d'Employés</label>
+                                        <input type="number" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.nombre_employes" name="nombre_employes"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Date de Création</label>
+                                        <input type="date" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.date_creation" name="date_creation"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <!-- Identifiant et statut -->
+                                <div class="col-md-6">
+                                    <h5>Identifiant et statut</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Identifiant Unique</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.identifiant_unique"
+                                            name="identifiant_unique" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Statut de l'Entreprise</label>
+                                        <select class="form-select" [(ngModel)]="entrepriseToUpdate.statut_entreprise"
+                                            name="statut_entreprise" required>
+                                            <option *ngFor="let statut of ['Actif', 'Inactif', 'validé', 'rejeté']"
+                                                [value]="statut">{{ statut }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Date d'Inscription</label>
+                                        <input type="date" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.date_inscription" name="date_inscription"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Superadmin Assigné</label>
+                                        <input type="text" class="form-control"
+                                            [(ngModel)]="entrepriseToUpdate.superadmin_assigne"
+                                            name="superadmin_assigne" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    (click)="closeUpdateForm()">Annuler</button>
+                                <button type="submit" class="btn btn-primary" [disabled]="!updateForm.valid || loading">
+                                    <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
+                                    Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="showUpdateForm" class="modal-backdrop fade show"></div>
+        </div>
+    </div>
+</div>

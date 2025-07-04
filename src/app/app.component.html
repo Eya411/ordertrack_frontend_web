@@ -1,0 +1,10 @@
+<div class="app-container">
+  <!-- Affiche la sidebar uniquement si connecté -->
+  <app-sidebar *ngIf="showSidebar()" />
+
+
+  <!-- Contenu principal -->
+  <main class="content-area" [class.with-sidebar]="showSidebar()">
+    <router-outlet></router-outlet>
+  </main>
+</div>

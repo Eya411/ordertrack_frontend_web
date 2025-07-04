@@ -1,0 +1,71 @@
+<div class="login-container">
+    <div class="floating-elements">
+        <div class="floating-element" style="width: 100px; height: 100px; top: 15%; left: 10%;"></div>
+        <div class="floating-element" style="width: 150px; height: 150px; top: 35%; left: 60%;"></div>
+        <div class="floating-element" style="width: 80px; height: 80px; top: 50%; left: 25%;"></div>
+        <div class="floating-element" style="width: 150px; height: 150px; top: 70%; left: 10%;"></div>
+        <div class="floating-element" style="width: 80px; height: 80px; top: 85%; left: 50%;"></div>
+        <div class="floating-element" style="width: 150px; height: 150px; top: 40%; left: 80%;"></div>
+        <div class="floating-element" style="width: 80px; height: 80px; top: 20%; left: 75%;"></div>
+    </div>
+
+
+    <mat-card class="login-card">
+        <h1 class="app-title">OrderTrack</h1>
+
+        <mat-card-content>
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Adresse Email</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="email" type="email" placeholder="ex: email@domaine.com">
+                    <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+                        L'email est requis
+                    </mat-error>
+                    <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+                        Entrez un email valide
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Mot de passe</mat-label>
+                    <mat-icon matPrefix>lock</mat-icon>
+                    <input matInput formControlName="password" type="password" placeholder="Votre mot de passe">
+                    <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+                        Le mot de passe est requis
+                    </mat-error>
+                </mat-form-field>
+
+                <div *ngIf="errorMessage" class="error-message">
+                    <mat-icon>error_outline</mat-icon>
+                    {{ errorMessage }}
+                </div>
+
+                <button mat-raised-button color="accent" type="submit" class="full-width"
+                    [disabled]="loginForm.invalid || isLoading">
+                    <span *ngIf="!isLoading">Se connecter</span>
+                    <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                </button>
+            </form>
+        </mat-card-content>
+        <mat-card-footer class="login-footer">
+            <p>
+                En vous inscrivant, vous acceptez nos
+                <a (click)="openPrivacy()">Politique de confidentialité</a> et
+                <a (click)="openTerms()">Conditions d'utilisation</a>.
+            </p>
+        </mat-card-footer>
+        <mat-card-actions class="login-actions">
+            <button mat-button color="primary" (click)="navigateToRegister()">
+                <mat-icon>person_add</mat-icon>
+                Créer un compte
+            </button>
+            <button mat-button color="primary" (click)="navigateToForgotPassword()">
+                <mat-icon>help_outline</mat-icon>
+                Mot de passe oublié ?
+            </button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</div>

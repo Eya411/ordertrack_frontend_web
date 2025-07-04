@@ -1,0 +1,26 @@
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+}
+
+.content-area {
+    flex: 1;
+    padding: 20px;
+    transition: margin-left 0.3s;
+    width: calc(100% - 280px);
+    /* Ajustement en fonction de la largeur de la sidebar */
+}
+
+.content-area.with-sidebar {
+    margin-left: 280px;
+    /* Correspond exactement à la largeur de votre sidebar */
+}
+
+/* Ajout de styles responsifs */
+@media (max-width: 768px) {
+    .content-area.with-sidebar {
+        margin-left: 250px;
+        /* Plus petit pour les écrans réduits */
+    }
+}

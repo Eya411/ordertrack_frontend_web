@@ -1,0 +1,337 @@
+<div class="main-content">
+    <h2 id="gestionAdministrateursHeading">Gestion des Administrateurs</h2>
+    <div class="container">
+        <!-- Messages d'erreur et de succès -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            <i class="fas fa-exclamation-circle alert-icon"></i> {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="alert alert-success">
+            <i class="fas fa-check-circle alert-icon"></i> {{ successMessage }}
+        </div>
+
+        <!-- Barre de recherche et filtres -->
+        <div class="recherche">
+            <input type="text" [(ngModel)]="searchNom" (input)="filterAdmins()" placeholder="Nom de l'administrateur"
+                class="form-control" name="searchNom" aria-label="Nom de l'administrateur" id="searchNomInput" />
+
+            <select [(ngModel)]="selectedRole" (change)="filterAdmins()" class="form-select" name="selectedRole"
+                aria-label="Rôle de l'administrateur" id="roleSelect">
+                <option value="">Tous les rôles</option>
+                <option *ngFor="let role of roles" [value]="role">{{role}}</option>
+            </select>
+
+            <select [(ngModel)]="selectedStatut" (change)="filterAdmins()" class="form-select" name="selectedStatut"
+                aria-label="Statut de l'administrateur" id="statutSelect">
+                <option value="">Tous les statuts</option>
+                <option *ngFor="let statut of statuses" [value]="statut">{{statut}}</option>
+            </select>
+
+            <button (click)="resetFilters()" class="btn btn-outline-secondary" title="Réinitialiser les filtres">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+
+        <!-- Bouton d'ajout d'administrateur -->
+        <button (click)="openAddAdminForm()" class="btn btn-success my-3" aria-label="Ajouter un administrateur"
+            id="addAdminBtn">
+            <i class="fas fa-plus-circle"></i> Ajouter un administrateur
+        </button>
+
+        <!-- Indicateur de chargement -->
+        <div *ngIf="loading" class="loading-spinner text-center my-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Chargement...</span>
+            </div>
+        </div>
+
+        <!-- Tableau des administrateurs -->
+        <div class="table-responsive" *ngIf="!loading">
+            <table class="table table-striped" id="adminTable">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th>Date de création</th>
+                        <th>Dernière connexion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let admin of filteredAdmins; trackBy: trackByAdminId">
+                        <td>{{ admin.nom }}</td>
+                        <td>{{ admin.email }}</td>
+                        <td>{{ admin.role }}</td>
+                        <td>
+                            <span class="badge" [ngClass]="{
+                                'bg-success': admin.statut === 'Actif',
+                                'bg-warning': admin.statut === 'En attente',
+                                'bg-danger': admin.statut === 'Supprimé' || admin.statut === 'Suspendu',
+                                'bg-primary': admin.statut === 'Inactif'
+                            }">
+                                {{ admin.statut }}
+                            </span>
+                        </td>
+                        <td>{{ admin.date_creation }}</td>
+                        <td>{{ admin.date_derniere_connexion }}</td>
+                        <td>
+                            <div class="admin-actions">
+                                <i class="fas fa-edit btn-icon" (click)="openUpdateForm(admin)" title="Modifier"
+                                    aria-label="Modifier l'administrateur" [id]="'editAdminBtn' + admin.id"></i>
+                                <i class="fas fa-trash-alt btn-icon" (click)="confirmDelete(admin)" title="Supprimer"
+                                    aria-label="Supprimer l'administrateur" [id]="'deleteAdminBtn' + admin.id"></i>
+                            </div>
+                            <div *ngIf="showPasswordMap[admin.id]" class="password-display">
+                                {{ admin.password }}
+                            </div>
+
+                        </td>
+                    </tr>
+                    <tr *ngIf="filteredAdmins.length === 0">
+                        <td colspan="7" class="text-center">Aucun administrateur trouvé</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal d'ajout d'un administrateur -->
+        <div *ngIf="showAddAdminForm" class="modal show" role="dialog" aria-labelledby="addAdminModalLabel"
+            aria-hidden="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="addAdminModalLabel">Ajouter un Administrateur</h3>
+                        <button type="button" class="btn-close" (click)="closeAddAdminForm()" aria-label="Fermer">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form #addForm="ngForm" id="addAdminForm">
+                            <div class="form-group">
+                                <label for="adminNomInput" class="form-label">Nom</label>
+                                <i class="fas fa-user"></i>
+                                <input type="text" [(ngModel)]="admin.nom" name="nom"
+                                    placeholder="Nom de l'administrateur" required aria-label="Nom de l'administrateur"
+                                    id="adminNomInput" class="form-control" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="adminEmailInput" class="form-label">Email</label>
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" [(ngModel)]="admin.email" name="email" placeholder="Email" required
+                                    aria-label="Email" id="adminEmailInput" class="form-control" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="adminPasswordInput" class="form-label">Mot de passe</label>
+                                <i class="fas fa-lock"></i>
+                                <div class="input-group">
+                                    <input [type]="showPasswordField ? 'text' : 'password'" [(ngModel)]="admin.password"
+                                        name="password" placeholder="Mot de passe (min. 8 caractères)" required
+                                        minlength="8" aria-label="Mot de passe" id="adminPasswordInput"
+                                        class="form-control" />
+                                    <!-- <button class="btn btn-outline-secondary" type="button"
+                                        (click)="togglePasswordField()">
+                                        <i class="fas" [ngClass]="showPasswordField ? 'fa-eye-slash' : 'fa-eye'"></i>
+
+
+                                    </button> -->
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="adminPasswordConfirm" class="form-label">Confirmation mot de passe</label>
+                                <i class="fas fa-lock"></i>
+                                <div class="input-group">
+                                    <input [type]="showPasswordConfirm ? 'text' : 'password'"
+                                        [(ngModel)]="passwordConfirm" name="passwordConfirm"
+                                        placeholder="Confirmez le mot de passe" required minlength="8"
+                                        aria-label="Confirmation mot de passe" id="adminPasswordConfirm"
+                                        class="form-control" />
+                                    <!-- <button class="btn btn-outline-secondary" type="button"
+                                        (click)="toggleShowPasswordConfirm()">
+                                        <i class="fas" [ngClass]="showPasswordConfirm ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button> -->
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="adminRoleSelect" class="form-label">Rôle</label>
+                                <i class="fas fa-user-shield"></i>
+                                <select [(ngModel)]="admin.role" name="role" aria-label="Rôle" id="adminRoleSelect"
+                                    class="form-control" required>
+                                    <option value="" disabled selected>Sélectionnez un rôle</option>
+                                    <option *ngFor="let role of roles" [value]="role">{{role}}</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="adminStatutSelect" class="form-label">Statut</label>
+                                <i class="fas fa-toggle-on"></i>
+                                <select [(ngModel)]="admin.statut" name="statut" aria-label="Statut"
+                                    id="adminStatutSelect" class="form-control" required>
+                                    <option value="" disabled selected>Sélectionnez un statut</option>
+                                    <option *ngFor="let statut of statuses" [value]="statut">{{statut}}
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" (click)="addAdmin()" class="btn btn-primary" [disabled]="!addForm.valid"
+                            aria-label="Ajouter l'administrateur" id="submitAddAdminBtn">
+                            <i class="fas fa-check-circle"></i> Ajouter
+                        </button>
+                        <button type="button" (click)="closeAddAdminForm()" class="btn btn-secondary"
+                            aria-label="Annuler l'ajout" id="cancelAddAdminBtn">
+                            <i class="fas fa-times-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de modification d'un administrateur -->
+        <div *ngIf="showUpdateForm" class="modal show" role="dialog" aria-labelledby="updateAdminModalLabel"
+            aria-hidden="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="updateAdminModalLabel">Modifier un Administrateur</h3>
+                        <button type="button" class="btn-close" (click)="cancelUpdate()" aria-label="Fermer">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form #updateForm="ngForm" id="updateAdminForm">
+                            <div class="form-group">
+                                <label for="selectedAdminNomInput" class="form-label">Nom</label>
+                                <i class="fas fa-user"></i>
+                                <input type="text" [(ngModel)]="selectedAdmin.nom" name="nom" id="selectedAdminNomInput"
+                                    placeholder="Nom de l'administrateur" class="form-control" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selectedAdminEmailInput" class="form-label">Email</label>
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" [(ngModel)]="selectedAdmin.email" name="email"
+                                    id="selectedAdminEmailInput" placeholder="Email" class="form-control" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selectedAdminRoleSelect" class="form-label">Rôle</label>
+                                <i class="fas fa-user-shield"></i>
+                                <select [(ngModel)]="selectedAdmin.role" name="role" id="selectedAdminRoleSelect"
+                                    class="form-control" required>
+                                    <option *ngFor="let role of roles" [value]="role">{{role}}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="selectedAdminStatutSelect" class="form-label">Statut</label>
+                                <i class="fas fa-toggle-on"></i>
+                                <select [(ngModel)]="selectedAdmin.statut" name="statut" aria-label="Statut"
+                                    id="selectedAdminStatutSelect" class="form-control" required>
+                                    <option *ngFor="let statut of statuses" [value]="statut">{{statut}}</option>
+                                </select>
+                            </div>
+                        </form>
+
+                        <div class="form-group">
+                            <label for="updatePassword" class="form-label">Nouveau mot de passe (laisser vide si
+                                inchangé)</label>
+                            <i class="fas fa-lock"></i>
+                            <div class="input-group">
+                                <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="newPassword"
+                                    name="newPassword" placeholder="Nouveau mot de passe (min. 8 caractères)"
+                                    minlength="8" id="updatePassword" class="form-control" />
+                                <!-- <button class="btn btn-outline-secondary" type="button"
+                                    (click)="toggleShowNewPassword()">
+                                    <i class="fas" [ngClass]="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button> -->
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="updatePasswordConfirm" class="form-label">Confirmation</label>
+                            <i class="fas fa-lock"></i>
+                            <div class="input-group">
+                                <input [type]="showNewPasswordConfirm ? 'text' : 'password'"
+                                    [(ngModel)]="newPasswordConfirm" name="newPasswordConfirm"
+                                    placeholder="Confirmez le nouveau mot de passe" minlength="8"
+                                    id="updatePasswordConfirm" class="form-control" />
+                                <!-- <button class="btn btn-outline-secondary" type="button"
+                                    (click)="toggleShowNewPasswordConfirm()">
+                                    <i class="fas" [ngClass]="showNewPasswordConfirm ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button> -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" (click)="updateAdmin()" class="btn btn-primary"
+                            [disabled]="!updateForm.valid" aria-label="Modifier l'administrateur"
+                            id="submitUpdateAdminBtn">
+                            <i class="fas fa-check-circle"></i> Modifier
+                        </button>
+                        <button type="button" (click)="cancelUpdate()" class="btn btn-secondary"
+                            aria-label="Annuler la modification" id="cancelUpdateBtn">
+                            <i class="fas fa-times-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de confirmation de suppression/restauration -->
+        <div *ngIf="showConfirmationDialog" class="modal show" role="dialog" aria-labelledby="deleteModalLabel"
+            aria-hidden="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">
+                            {{ adminToDelete?.statut === 'Supprimé' ? 'Restaurer l\'administrateur' : 'Supprimer
+                            l\'administrateur' }}
+                        </h5>
+                        <button type="button" class="btn-close" (click)="closeConfirmationDialog()" aria-label="Fermer">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            {{ adminToDelete?.statut === 'Supprimé' ?
+                            'Voulez-vous restaurer l\'administrateur ' :
+                            'Voulez-vous marqué comme supprimer l\'administrateur ' }}
+                            <strong>{{ adminToDelete?.nom }}</strong> ?
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <ng-container *ngIf="adminToDelete?.statut === 'Supprimé'; else notDeletedActions">
+                            <button type="button" (click)="restoreAdmin(adminToDelete!)" class="btn btn-successRES"
+                                [disabled]="isProcessing">
+                                <i class="fas fa-undo"></i> {{ isProcessing ? 'Traitement...' : 'Restaurer' }}
+                            </button>
+
+                            <button type="button" (click)="permanentDelete(adminToDelete!)" class="btn btn-danger"
+                                [disabled]="isProcessing">
+                                <i class="fas fa-trash-alt"></i> {{ isProcessing ? 'Traitement...' : 'Supprimer
+                                définitivement' }}
+                            </button>
+                        </ng-container>
+
+                        <ng-template #notDeletedActions>
+                            <button type="button" (click)="deleteAdmin()" class="btn btn-warning"
+                                [disabled]="isProcessing">
+                                <i class="fas fa-minus-circle"></i> {{ isProcessing ? 'Traitement...' : 'Supprimer' }}
+                            </button>
+                        </ng-template>
+
+                        <button type="button" (click)="closeConfirmationDialog()" class="btn btn-secondary"
+                            [disabled]="isProcessing">
+                            <i class="fas fa-times-circle"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
